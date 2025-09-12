@@ -9,22 +9,15 @@
 #include <stdint.h>
 
 #include "onegin.h"
-
-int filter_lines(const char *line) {
-	assert (line);
-
-	if (*line == '\n')
-		return 0;
-
-	return 1;
-}
+#include "comparator.h"
 
 struct file_text_parameters {
 	size_t max_line_length;
 	size_t text_lines_cnt;
 };
 
-int lookup_file_parameters(FILE *text_file, struct file_text_parameters *params) {
+static int lookup_file_parameters(FILE *text_file, 
+				  struct file_text_parameters *params) {
 	assert (text_file);
 	assert (params);
 
@@ -110,24 +103,7 @@ static int vectorized_swap(char *p1, char *p2, size_t sz) {
 
 #undef ES_SWAP_BYTES 
 
-int strings_comparator(const char *a1, const char *a2) {
-	assert (a1);
-	assert (a2);
-
-	// /*
-	do {
-		if (*(const unsigned char *)a1 != *(const unsigned char *)a2) {
-			return *a1 > *a2;
-		}
-	} while (*(a1++) != '\0' && *(a2++) != '\0');
-
-	return 0;
-	// */
-
-	return strcmp(a1, a2) >= 0;
-}
-
-int strings_sort(char *text_array, size_t line_width, size_t lines_cnt) {
+static int strings_sort(char *text_array, size_t line_width, size_t lines_cnt) {
 	assert (text_array);
 
 	for (size_t i = 0; i < lines_cnt; i++) {
@@ -145,7 +121,7 @@ int strings_sort(char *text_array, size_t line_width, size_t lines_cnt) {
 	return 0;
 }
 
-int process_text(FILE *in_file, FILE *out_file) {
+int process_text_rectangle(FILE *in_file, FILE *out_file) {
 	assert(in_file); 	
 	assert(out_file);
 
