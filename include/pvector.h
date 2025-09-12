@@ -15,6 +15,8 @@ struct pvector {
 int pvector_init(struct pvector *pv);
 int pvector_set_destructor(struct pvector *pv, pvector_el_destructor_t destructor);
 
+int pvector_set_capacity(struct pvector *pv, size_t new_cap);
+
 int pvector_destroy(struct pvector *pv);
 
 ssize_t pvector_push_back(struct pvector *pv, void *ptr);

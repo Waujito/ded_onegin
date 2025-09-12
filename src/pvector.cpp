@@ -25,6 +25,29 @@ int pvector_set_destructor(struct pvector *pv, pvector_el_destructor_t destructo
 	return 0;
 }
 
+int pvector_set_capacity(struct pvector *pv, size_t new_cap) {
+	assert(pv);
+
+	if (new_cap < pv->len) {
+		return -1;
+	}
+
+	if (new_cap < PVECTOR_INIT_CAPACITY) {
+		   new_cap = PVECTOR_INIT_CAPACITY;
+	}
+
+	void **new_arr = (void **)realloc(pv->arr, 
+			    new_cap * sizeof (void *));
+	if (!new_arr) {
+		return -1;
+	}
+
+	pv->arr = new_arr;
+	pv->capacity = new_cap;
+	
+	return 0;
+}
+
 int pvector_destroy(struct pvector *pv) {
 	assert(pv);
 
@@ -47,17 +70,7 @@ ssize_t pvector_push_back(struct pvector *pv, void *ptr) {
 
 	if (pv->len >= pv->capacity) {
 		size_t new_cap = pv->capacity * 2;
-		if (new_cap < PVECTOR_INIT_CAPACITY) {
-			   new_cap = PVECTOR_INIT_CAPACITY;
-		}
-
-		void **new_arr = (void **)realloc(pv->arr, new_cap * sizeof (void *));
-		if (!new_arr) {
-			return -1;
-		}
-
-		pv->arr = new_arr;
-		pv->capacity = new_cap;
+		pvector_set_capacity(pv, new_cap);
 	}
 
 	size_t idx = pv->len++;
@@ -74,6 +87,10 @@ int pvector_pop_back(struct pvector *pv) {
 	}
 
 	pv->len--;
+
+	if (pv->len <= pv->capacity / 4) {
+		pvector_set_capacity(pv, pv->len);
+	}
 
 	return 0;
 }
