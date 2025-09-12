@@ -71,7 +71,9 @@ int process_text_singlebuf(FILE *in_file, FILE *out_file) {
 
 			if (!filter_lines(start_lineptr)) {
 				start_lineptr = cur_lineptr + 1;
-				goto incr_ptrs;
+				cur_lineptr++;
+				left_size--;
+				continue;
 			}
 
 			if (pvector_push_back(&lines_arr, start_lineptr) < 0) {
@@ -83,7 +85,6 @@ int process_text_singlebuf(FILE *in_file, FILE *out_file) {
 			start_lineptr = cur_lineptr + 1;
 		}
 
-incr_ptrs:
 		cur_lineptr++;
 		left_size--;
 	}
