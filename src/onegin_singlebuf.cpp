@@ -11,28 +11,7 @@
 #include "onegin.h"
 #include "comparator.h"
 #include "pvector.h"
-
-
-static int strings_sort(pvector *lines_arr) {
-	assert (lines_arr);
-
-	for (size_t i = 0; i < lines_arr->len; i++) {
-		const char *a1 = (const char *)lines_arr->arr[i];
-
-		for (size_t j = 0; j < i; j++) {
-			const char *a2 = (const char *)lines_arr->arr[j];
-			int cmp = strings_comparator(a1, a2);
-
-			if (!cmp) {
-				void *tmp = lines_arr->arr[i];
-				lines_arr->arr[i] = lines_arr->arr[j];
-				lines_arr->arr[j] = tmp;
-			}
-		}
-	}
-
-	return 0;
-}
+#include "sort.h"
 
 int process_text_singlebuf(FILE *in_file, FILE *out_file) {
 	assert(in_file); 	
@@ -109,7 +88,7 @@ incr_ptrs:
 		left_size--;
 	}
 
-	strings_sort(&lines_arr);
+	pvector_bubble_sort(&lines_arr, strings_comparator);
 
 	for (size_t i = 0; i < lines_arr.len; i++) {
 		fprintf(out_file, "%s\n", (const char *)lines_arr.arr[i]);

@@ -3,6 +3,6 @@
 
 int filter_lines(const char *line);
 
-int strings_comparator(const char *a1, const char *a2);
+int strings_comparator(const void *a1, const void *a2);
 
 #endif /* STR_COMPARATOR_H */
