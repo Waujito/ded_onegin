@@ -13,7 +13,7 @@
 #include "pvector.h"
 
 
-int strings_sort(pvector *lines_arr) {
+static int strings_sort(pvector *lines_arr) {
 	assert (lines_arr);
 
 	for (size_t i = 0; i < lines_arr->len; i++) {

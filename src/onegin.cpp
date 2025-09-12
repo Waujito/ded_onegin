@@ -25,7 +25,7 @@ struct program_context {
 	const char *out_filename;
 };
 
-void init_program_ctx(struct program_context *ctx) {
+static void init_program_ctx(struct program_context *ctx) {
 	ctx->in_filename = DEFAULT_INPUT_FILENAME;
 	ctx->out_filename = DEFAULT_OUTPUT_FILENAME;
 }
