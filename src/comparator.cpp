@@ -8,6 +8,9 @@ int filter_lines(const char *line) {
 	if (*line == '\n')
 		return 0;
 
+	if (*line == '\0')
+		return 0;
+
 	return 1;
 }
 

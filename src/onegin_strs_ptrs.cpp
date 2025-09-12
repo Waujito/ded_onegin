@@ -34,7 +34,7 @@ static int strings_sort(pvector *lines_arr) {
 	return 0;
 }
 
-int process_text_char_arr(FILE *in_file, FILE *out_file) {
+int process_text_strs_ptrs(FILE *in_file, FILE *out_file) {
 	assert(in_file); 	
 	assert(out_file);
 

@@ -41,9 +41,9 @@ static int lookup_file_parameters(FILE *text_file,
 	}
 
 	if (errno) {
-		free(lineptr);
 		perror("lookup error");
 
+		free(lineptr);
 		return -1;
 	}
 
@@ -55,7 +55,13 @@ static int lookup_file_parameters(FILE *text_file,
 	max_line_length++;
 
 	/* Move file position indicator to the begginning of the file */
-	rewind(text_file);
+	int ret = fseek(text_file, 0, SEEK_SET);
+	if (ret) {
+		perror("fseek to start");
+
+		free(lineptr);
+		return -1;
+	}
 
 	params->max_line_length = max_line_length;
 	params->text_lines_cnt = text_lines_cnt;
