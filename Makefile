@@ -23,9 +23,9 @@ export CXX CFLAGS
 
 BUILD_DIR := build
 
-LIBSRC := 
+LIBSRC := src/onegin_rectangle.cpp src/argparse.cpp
 LIBOBJ := $(LIBSRC:%.cpp=$(BUILD_DIR)/%.o)
-# STATIC_LIB := $(BUILD_DIR)/onegin_lib.a
+STATIC_LIB := $(BUILD_DIR)/onegin_lib.a
 
 TESTLIBSRC := test/test_machine.cpp
 TESTLIBOBJ := $(TESTLIBSRC:%.cpp=$(BUILD_DIR)/%.o)
