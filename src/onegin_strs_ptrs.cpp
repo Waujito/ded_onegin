@@ -63,7 +63,7 @@ int process_text_strs_ptrs(FILE *in_file, FILE *out_file) {
 		return -1;
 	}
 
-	pvector_bubble_sort(&lines_arr, strings_comparator);
+	pvector_sort(&lines_arr, strings_comparator);
 
 	for (size_t i = 0; i < lines_arr.len; i++) {
 		fprintf(out_file, "%s", (const char *)lines_arr.arr[i]);

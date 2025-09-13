@@ -89,7 +89,7 @@ int process_text_singlebuf(FILE *in_file, FILE *out_file) {
 		left_size--;
 	}
 
-	pvector_bubble_sort(&lines_arr, strings_comparator);
+	pvector_sort(&lines_arr, strings_comparator);
 
 	for (size_t i = 0; i < lines_arr.len; i++) {
 		fprintf(out_file, "%s\n", (const char *)lines_arr.arr[i]);
