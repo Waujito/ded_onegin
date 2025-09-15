@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <string.h>
 
 #include "comparator.h"
 
@@ -22,7 +23,7 @@ int strings_comparator(const void *a1, const void *a2) {
 	const char *t2 = (const char *)a2;
 
 	do {
-		if (*(const unsigned char *)a1 != *(const unsigned char *)a2) {
+		if (*t1 != *t2) {
 			return *t1 > *t2;
 		}
 	} while (*(t1++) != '\0' && *(t2++) != '\0');
