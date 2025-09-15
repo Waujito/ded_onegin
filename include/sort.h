@@ -5,10 +5,19 @@
 
 typedef int (*pv_sort_comparator)(const void *, const void *);
 
-int pvector_bubble_sort(pvector *lines_arr, pv_sort_comparator comparator);
+typedef int (*pv_sorting_function)(struct pvector *lines_arr, 
+				   pv_sort_comparator comparator);
 
-static inline int pvector_sort(pvector *lines_arr, pv_sort_comparator comparator) {
-	return pvector_bubble_sort(lines_arr, comparator);
+int pvector_bubble_sort(struct pvector *lines_arr, 
+			pv_sort_comparator comparator);
+
+int pvector_merge_sort(pvector *lines_arr,
+		       pv_sort_comparator comparator);
+
+static inline int pvector_sort(struct pvector *lines_arr, 
+			       pv_sort_comparator comparator) {
+	// return pvector_bubble_sort(lines_arr, comparator);
+	return pvector_merge_sort(lines_arr, comparator);
 }
 
 #endif /* SORT_H */

@@ -23,14 +23,14 @@ export CXX CFLAGS
 
 BUILD_DIR := build
 
-LIBSRC := src/onegin_strs_ptrs.cpp src/onegin_singlebuf.cpp src/onegin_rectangle.cpp src/argparse.cpp src/comparator.cpp src/pvector.cpp
+LIBSRC := src/onegin_strs_ptrs.cpp src/onegin_singlebuf.cpp src/onegin_rectangle.cpp src/argparse.cpp src/comparator.cpp src/pvector.cpp src/sort.cpp
 LIBOBJ := $(LIBSRC:%.cpp=$(BUILD_DIR)/%.o)
 STATIC_LIB := $(BUILD_DIR)/onegin_lib.a
 
 TESTLIBSRC := test/test_machine.cpp
 TESTLIBOBJ := $(TESTLIBSRC:%.cpp=$(BUILD_DIR)/%.o)
 
-TESTSRC := #test/strstr.cpp test/strfuncs.cpp
+TESTSRC := test/test_sort.cpp #test/strstr.cpp test/strfuncs.cpp
 TESTOBJ := $(TESTSRC:%.cpp=$(BUILD_DIR)/%.o)
 TEST_LIB_APP := $(BUILD_DIR)/test_onegin
 
