@@ -1,5 +1,7 @@
 /**
- * A dumbass onegin realization. Stores lines in a 2D array 
+ * !!!NOTE!!!
+ * A dumbass onegin realization. Stores lines in a 2D array.
+ * DO NOT USE THIS
  */
 
 #include <stdio.h>
