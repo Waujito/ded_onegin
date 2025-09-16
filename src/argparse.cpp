@@ -48,7 +48,7 @@ static enum lookup_option_status lookup_for_option(
 	while (*optname && *arg_name && *optname == *arg_name)
 		optname++, arg_name++, cmp_len++;
 
-	if (*arg_name && *arg_name != '=') {
+	if ((*arg_name && *arg_name != '=') || *optname) {
 		return LOOKUP_CONTINUE;
 	}
 
