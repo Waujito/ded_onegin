@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#include "vectorized_swap.h"
+
 #include "onegin.h"
 #include "comparator.h"
 
@@ -71,46 +73,6 @@ static int lookup_file_parameters(FILE *text_file,
 	return 0;
 }
 
-#define ES_SWAP_BYTES(p1, p2, dtype) {		\
-	dtype dt1 = 0;				\
-	memcpy(&dt1, p1, sizeof(dt1));		\
-	memcpy(p1, p2, sizeof(dt1));		\
-	memcpy(p2, &dt1, sizeof(dt1));		\
-	p1 += sizeof(dt1);			\
-	p2 += sizeof(dt1);			\
-}
-
-static int vectorized_swap(char *p1, char *p2, size_t sz) {
-	assert (p1);
-	assert (p2);
-
-	size_t processed_sz = 0;
-
-	while (processed_sz + sizeof(uint64_t) <= sz) {
-		ES_SWAP_BYTES(p1, p2, uint64_t);
-		processed_sz += sizeof(uint64_t);
-	}
-
-	if (processed_sz + sizeof(uint32_t) <= sz) {
-		ES_SWAP_BYTES(p1, p2, uint32_t);
-		processed_sz += sizeof(uint32_t);
-	}
-
-	if (processed_sz + sizeof(uint16_t) <= sz) {
-		ES_SWAP_BYTES(p1, p2, uint16_t);
-		processed_sz += sizeof(uint16_t);
-	}
-
-	while (processed_sz + sizeof(char) <= sz) {
-		ES_SWAP_BYTES(p1, p2, char);
-		processed_sz += sizeof(char);
-	}
-
-	return 0;
-}
-
-#undef ES_SWAP_BYTES
-
 static int strings_sort(char *text_array, size_t line_width, size_t lines_cnt) {
 	assert (text_array);
 
@@ -130,8 +92,8 @@ static int strings_sort(char *text_array, size_t line_width, size_t lines_cnt) {
 }
 
 int process_text_rectangle(FILE *in_file, FILE *out_file) {
-	assert(in_file); 	
-	assert(out_file);
+	assert (in_file); 	
+	assert (out_file);
 
 	struct file_text_parameters file_params = {0};
 

@@ -4,47 +4,9 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "vectorized_swap.h"
+
 #include "sort.h"
-
-#define ES_SWAP_BYTES(p1, p2, dtype) {		\
-	dtype dt1 = 0;				\
-	memcpy(&dt1, p1, sizeof(dt1));		\
-	memcpy(p1, p2, sizeof(dt1));		\
-	memcpy(p2, &dt1, sizeof(dt1));		\
-	p1 += sizeof(dt1);			\
-	p2 += sizeof(dt1);			\
-}
-
-static int vectorized_swap(char *p1, char *p2, size_t sz) {
-	assert (p1);
-	assert (p2);
-
-	size_t processed_sz = 0;
-
-	while (processed_sz + sizeof(uint64_t) <= sz) {
-		ES_SWAP_BYTES(p1, p2, uint64_t);
-		processed_sz += sizeof(uint64_t);
-	}
-
-	if (processed_sz + sizeof(uint32_t) <= sz) {
-		ES_SWAP_BYTES(p1, p2, uint32_t);
-		processed_sz += sizeof(uint32_t);
-	}
-
-	if (processed_sz + sizeof(uint16_t) <= sz) {
-		ES_SWAP_BYTES(p1, p2, uint16_t);
-		processed_sz += sizeof(uint16_t);
-	}
-
-	if (processed_sz + sizeof(char) <= sz) {
-		ES_SWAP_BYTES(p1, p2, char);
-		processed_sz += sizeof(char);
-	}
-
-	return 0;
-}
-
-#undef ES_SWAP_BYTES
 
 int alg_bubble_sort(void *arr, size_t nmemb, size_t size,
 		    alg_sorting_comparator comparator) {
@@ -149,6 +111,10 @@ int alg_merge_sort(void *arr, size_t nmemb, size_t size,
 
 int alg_quick_sort(void *arr, size_t nmemb, size_t size,
 		   alg_sorting_comparator comparator) {
+	assert (arr);
+	assert (comparator);
+
 	qsort(arr, nmemb, size, comparator);
 	return 0;
 }
+

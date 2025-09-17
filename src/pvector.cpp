@@ -6,8 +6,6 @@
 #include "pvector.h"
 #include "sort.h"
 
-#define PVECTOR_INIT_CAPACITY (128)
-
 int pvector_init(struct pvector *pv, size_t el_size) {
 	assert (pv);
 	assert (el_size);
@@ -23,7 +21,7 @@ int pvector_init(struct pvector *pv, size_t el_size) {
 }
 
 int pvector_set_destructor(struct pvector *pv, pvector_el_destructor_t destructor) {
-	assert(pv);
+	assert (pv);
 
 	pv->destructor = destructor;
 
@@ -31,14 +29,15 @@ int pvector_set_destructor(struct pvector *pv, pvector_el_destructor_t destructo
 }
 
 int pvector_set_capacity(struct pvector *pv, size_t new_cap) {
-	assert(pv);
+	assert (pv);
 
 	if (new_cap < pv->len) {
 		return -1;
 	}
 
 	if (new_cap == 0) {
-		   new_cap = PVECTOR_INIT_CAPACITY;
+		static const size_t PVECTOR_INIT_CAPACITY = 128;
+		new_cap = PVECTOR_INIT_CAPACITY;
 	}
 
 	char *new_arr = (char *)realloc(pv->arr, 
@@ -54,7 +53,7 @@ int pvector_set_capacity(struct pvector *pv, size_t new_cap) {
 }
 
 int pvector_destroy(struct pvector *pv) {
-	assert(pv);
+	assert (pv);
 
 	if (pv->destructor) {
 		for (size_t i = 0; i < pv->len; i++) {
@@ -70,7 +69,10 @@ int pvector_destroy(struct pvector *pv) {
 	return 0;
 }
 
-int pvector_clone(const struct pvector *pv, struct pvector *npv) {
+int pvector_clone(struct pvector *npv, const struct pvector *pv) {
+	assert (pv);
+	assert (npv);
+
 	char *arr = (char *)calloc(pv->len * pv->el_size, sizeof(char));
 	if (!arr) {
 		return -1;
@@ -124,13 +126,13 @@ int pvector_pop_back(struct pvector *pv) {
 }
 
 int pvector_has(const struct pvector *pv, size_t idx) {
-	assert(pv);
+	assert (pv);
 
 	return idx < pv->len;
 }
 
 void *pvector_get(const struct pvector *pv, size_t idx) {
-	assert(pv);
+	assert (pv);
 
 	if (idx >= pv->len) {
 		return NULL;

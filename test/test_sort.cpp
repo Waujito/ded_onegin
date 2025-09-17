@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "test_config.h" // IWYU pragma: keep
 
 #include "pvector.h"
@@ -23,26 +25,31 @@ static int pv_int_comparator(const void *a1, const void *a2) {
 	return int_comparator(n1, n2);
 }
 
-static void test_alg_sorting_function(alg_sorting_function sorting_fn) {
-	int a[]		= {1 , 3 , -1, 2 , 5 , 0 , 9 , -5, 5};
-	int sorted[]	= {-5, -1, 0 , 1 , 2 , 3 , 5 , 5 , 9};
+static void test_alg_sorting_function(alg_sorting_function sorting_fn, int *a, size_t arr_sz) {
+	int *sorted = (int *)calloc(arr_sz, sizeof(int));
+	if (!sorted) {
+		ASSERT_EQ(0, 1);
+	}
+	memcpy(sorted, a, arr_sz * sizeof(int));
+	qsort(sorted, arr_sz, sizeof(int), int_comparator);
 
-	size_t arr_sz = sizeof(a) / sizeof(int);
-
-	int ret = sorting_fn(a, arr_sz, sizeof(a[0]), int_comparator);
+	int ret = sorting_fn(a, arr_sz, sizeof(int), int_comparator);
 	ASSERT_EQ(ret, 0);
 
 	for (size_t i = 0; i < arr_sz; i++) {
 		ASSERT_EQ(a[i], sorted[i]);
 	}
+
+	free(sorted);
 }
 
-static void test_pv_sorting_function(pv_sorting_function sorting_fn) {
-	int a[]		= {1 , 3 , -1, 2 , 5 , 0 , 9 , -5, 5};
-	int sorted[]	= {-5, -1, 0 , 1 , 2 , 3 , 5 , 5 , 9};
-
-	size_t arr_sz = sizeof(a) / sizeof(int);
-
+static void test_pv_sorting_function(pv_sorting_function sorting_fn, int *a, size_t arr_sz) {
+	int *sorted = (int *)calloc(arr_sz, sizeof(int));
+	if (!sorted) {
+		ASSERT_EQ(0, 1);
+	}
+	memcpy(sorted, a, arr_sz * sizeof(int));
+	qsort(sorted, arr_sz, sizeof(int), int_comparator);
 
 	int ret = 0;
 	
@@ -62,29 +69,44 @@ static void test_pv_sorting_function(pv_sorting_function sorting_fn) {
 	}
 
 	pvector_destroy(&arr);
+	free(sorted);
+}
 
+
+static void test_alg_sorting_function_default(alg_sorting_function sorting_fn) {
+	int a[] = {1 , 3 , -1, 2 , 5 , 0 , 9 , -5, 5};
+	size_t arr_sz = sizeof(a) / sizeof(a[0]);
+
+	test_alg_sorting_function(sorting_fn, a, arr_sz);
+}
+
+static void test_pv_sorting_function_default(pv_sorting_function sorting_fn) {
+	int a[] = {1 , 3 , -1, 2 , 5 , 0 , 9 , -5, 5};
+	size_t arr_sz = sizeof(a) / sizeof(a[0]);
+
+	test_pv_sorting_function(sorting_fn, a, arr_sz);
 }
 
 TEST(TestSort, BubbleSort) {
-	test_alg_sorting_function(alg_bubble_sort);
+	test_alg_sorting_function_default(alg_bubble_sort);
 }
 
 TEST(TestSort, MergeSort) {
-	test_alg_sorting_function(alg_merge_sort);
+	test_alg_sorting_function_default(alg_merge_sort);
 }
 
 TEST(TestSort, QuickSort) {
-	test_alg_sorting_function(alg_quick_sort);
+	test_alg_sorting_function_default(alg_quick_sort);
 }
 
 TEST(TestSort, PVBubbleSort) {
-	test_pv_sorting_function(pvector_bubble_sort);
+	test_pv_sorting_function_default(pvector_bubble_sort);
 }
 
 TEST(TestSort, PVMergeSort) {
-	test_pv_sorting_function(pvector_merge_sort);
+	test_pv_sorting_function_default(pvector_merge_sort);
 }
 
 TEST(TestSort, PVQuickSort) {
-	test_pv_sorting_function(pvector_quick_sort);
+	test_pv_sorting_function_default(pvector_quick_sort);
 }

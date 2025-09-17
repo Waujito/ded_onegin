@@ -72,14 +72,14 @@ int main(int argc, const char *argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	FILE *in_text_file = fopen(ctx.in_filename, "r");
+	FILE *in_text_file = fopen(ctx.in_filename, "rb");
 	if (!in_text_file) {
 		fmtperror("Cannot read file %s", ctx.in_filename);
 
 		return EXIT_FAILURE;
 	}
 
-	FILE *out_text_file = fopen(ctx.out_filename, "w");
+	FILE *out_text_file = fopen(ctx.out_filename, "wb");
 	if (!out_text_file) {
 		fmtperror("Cannot read file %s", ctx.out_filename);
 

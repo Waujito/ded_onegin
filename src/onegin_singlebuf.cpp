@@ -48,7 +48,39 @@ static ssize_t get_file_size(FILE *file) {
 #endif /* FGETSIZE_USE_FSEEK */
 }
 
+static int read_file(const char *filename, char **bufptr, size_t *read_bytes_ptr) {
+	FILE *file = fopen(filename, "rb");
+	ssize_t fsize = get_file_size(file);
+	if (fsize < 0) {
+		return -1;
+	}
+
+	char *text_buf = (char *)calloc((size_t) fsize + 1, sizeof(char));
+	if (!text_buf) {
+		perror("text arr alloc");
+		return -1;
+	}
+	
+	size_t read_bytes = fread(text_buf, sizeof(char), (size_t) fsize, file);
+	if (ferror(file)) {
+		perror("fread ferror");
+
+		free(text_buf);
+		return -1;
+	}
+	text_buf[read_bytes] = '\0';
+
+	*bufptr = text_buf;
+
+	*read_bytes_ptr = read_bytes;
+
+	return 0;
+}
+
 static int read_lines(char *text_buf, size_t buflen, struct pvector *lines_arr) {
+	assert (text_buf);
+	assert (lines_arr);
+
 	char *start_lineptr = text_buf;
 	size_t line_sz = 1;
 	char *cur_lineptr = start_lineptr;
@@ -84,10 +116,17 @@ static int read_lines(char *text_buf, size_t buflen, struct pvector *lines_arr) 
 	return 0;
 }
 
-int process_text_singlebuf(FILE *in_file, FILE *out_file) {
-	assert(in_file); 
-	assert(out_file);
+static size_t count_lines(char *text_buf, size_t buflen) {
+	size_t nlines = 1;
+	for (size_t i = 0; i < buflen; i++) {
+		if (text_buf[i] == '\n' || text_buf[i] == '\0')
+			nlines++;
+	}
 
+	return nlines;
+}
+
+int process_text_singlebuf(FILE *in_file, FILE *out_file) {
 	int ret = 0;
 
 	ssize_t fsize = get_file_size(in_file);
@@ -95,13 +134,13 @@ int process_text_singlebuf(FILE *in_file, FILE *out_file) {
 		return -1;
 	}
 
-	char *text_buf = (char *)calloc((size_t) fsize + 1, sizeof (char));
+	char *text_buf = (char *)calloc((size_t) fsize + 1, sizeof(char));
 	if (!text_buf) {
 		perror("text arr alloc");
 		return -1;
 	}
 	
-	size_t read_bytes = fread(text_buf, sizeof (char), (size_t) fsize, in_file);
+	size_t read_bytes = fread(text_buf, sizeof(char), (size_t)fsize, in_file);
 	if (ferror(in_file)) {
 		perror("fread ferror");
 
@@ -109,9 +148,10 @@ int process_text_singlebuf(FILE *in_file, FILE *out_file) {
 		return -1;
 	}
 	text_buf[read_bytes] = '\0';
+	read_bytes++;
 
 	struct pvector lines_arr = {0};
-	ret = pvector_init(&lines_arr, sizeof (struct onegin_line));
+	ret = pvector_init(&lines_arr, sizeof(struct onegin_line));
 	if (ret) {
 		perror("pvector_init");
 
@@ -119,11 +159,7 @@ int process_text_singlebuf(FILE *in_file, FILE *out_file) {
 		return -1;
 	}
 
-	size_t nlines = 1;
-	for (size_t i = 0; i <= read_bytes; i++) {
-		if (text_buf[i] == '\n' || text_buf[i] == '\0')
-			nlines++;
-	}
+	size_t nlines = count_lines(text_buf, read_bytes);
 
 	pvector_set_capacity(&lines_arr, nlines + 1);
 
@@ -136,14 +172,14 @@ int process_text_singlebuf(FILE *in_file, FILE *out_file) {
 	printf("text_lines_cnt: <%zu>\n", lines_arr.len);
 
 	struct pvector forward_arr = {0};
-	if (pvector_clone(&lines_arr, &forward_arr)) {
+	if (pvector_clone(&forward_arr, &lines_arr)) {
 		pvector_destroy(&lines_arr);
 		free(text_buf);
 		return -1;
 	}
 
 	struct pvector backward_arr = {0};
-	if (pvector_clone(&lines_arr, &backward_arr)) {
+	if (pvector_clone(&forward_arr, &lines_arr)) {
 		pvector_destroy(&forward_arr);
 		pvector_destroy(&lines_arr);
 		free(text_buf);

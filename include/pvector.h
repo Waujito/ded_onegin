@@ -24,7 +24,7 @@ int pvector_destroy(struct pvector *pv);
 ssize_t pvector_push_back(struct pvector *pv, void *ptr);
 int pvector_pop_back(struct pvector *pv);
 
-int pvector_clone(const struct pvector *pv, struct pvector *npv);
+int pvector_clone(struct pvector *npv, const struct pvector *pv);
 
 int pvector_has(const struct pvector *pv, size_t idx);
 void *pvector_get(const struct pvector *pv, size_t idx);

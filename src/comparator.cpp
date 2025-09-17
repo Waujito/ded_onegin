@@ -15,8 +15,7 @@ int filter_lines(const char *line) {
 	return 1;
 }
 
-static inline __attribute__((__always_inline__)) int
-is_letter(char c) {
+static inline int is_letter(char c) {
 	// 0-9
 	if (c >= 48 && c <= 57) {
 		return 1;
@@ -33,8 +32,7 @@ is_letter(char c) {
 	return 0;
 }
 
-static inline __attribute__((__always_inline__)) int
-compare_chars(char c1, char c2) {
+static inline int compare_chars(char c1, char c2) {
 	// a-z to A-Z
 	if (c1 >= 97 && c1 <= 122) {
 		c1 -= 32;
@@ -53,15 +51,18 @@ compare_chars(char c1, char c2) {
 	}
 }
 
-static inline __attribute__((__always_inline__)) void
-skip_no_letter(const char **letter) {
+static inline void skip_no_letter(const char **letter) {
+	assert (letter);
+
 	while (**letter && !is_letter(**letter)) {
 		(*letter)++;
 	}
 }
 
-static inline __attribute__((__always_inline__)) void
-skip_no_letter_backwards(const char **letter, ssize_t *left_len) {
+static inline void skip_no_letter_backwards(const char **letter, ssize_t *left_len) {
+	assert (letter);
+	assert (left_len);
+
 	while (*left_len > 0 && !is_letter(**letter)) {
 		(*letter)--, (*left_len)--;
 	}

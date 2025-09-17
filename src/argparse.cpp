@@ -30,10 +30,10 @@ static enum lookup_option_status lookup_for_option(
 			int argc, int *argi, 
 			const char *argv[], struct option *opt,
 			struct args_context *actx) {
-	assert(argi);
-	assert(argv);
-	assert(opt);
-	assert(actx);
+	assert (argi);
+	assert (argv);
+	assert (opt);
+	assert (actx);
 
 	// TODO allow option without an argument
 	const char *optname	= opt->name;
@@ -79,9 +79,9 @@ static enum lookup_option_status lookup_for_option(
 int parse_args(int argc, const char *argv[], 
 	       struct option opts[],
 	       args_callback callback, void *context) {
-	assert(argv);
-	assert(opts);
-	assert(callback);
+	assert (argv);
+	assert (opts);
+	assert (callback);
 
 	for (int argi = 1; argi < argc; argi++) {
 		struct args_context ctx = {{0}};

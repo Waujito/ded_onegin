@@ -20,8 +20,8 @@ static void pvector_str_destructor(void *el) {
 }
 
 int process_text_strs_ptrs(FILE *in_file, FILE *out_file) {
-	assert(in_file); 	
-	assert(out_file);
+	assert (in_file); 	
+	assert (out_file);
 
 	int ret = 0;
 
