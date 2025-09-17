@@ -22,8 +22,12 @@ int strings_comparator(const void *a1, const void *a2) {
 	const char *t2 = *(const char *const *)a2;
 
 	do {
-		if (*t1 != *t2) {
-			return *t1 > *t2;
+		if (*t1 == *t2) {
+			continue;
+		} else if (*t1 > *t2) {
+			return 1;
+		} else {
+			return -1;
 		}
 	} while (*(t1++) != '\0' && *(t2++) != '\0');
 

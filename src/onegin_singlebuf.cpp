@@ -51,7 +51,7 @@ int process_text_singlebuf(FILE *in_file, FILE *out_file) {
 	}
 
 	struct pvector lines_arr = {0};
-	ret = pvector_init(&lines_arr);
+	ret = pvector_init(&lines_arr, sizeof (void *));
 	if (ret) {
 		perror("pvector_init");
 
@@ -75,7 +75,7 @@ int process_text_singlebuf(FILE *in_file, FILE *out_file) {
 				continue;
 			}
 
-			if (pvector_push_back(&lines_arr, start_lineptr) < 0) {
+			if (pvector_push_back(&lines_arr, &start_lineptr) < 0) {
 				pvector_destroy(&lines_arr);
 				free(text_stream);
 				return -1;
@@ -91,7 +91,7 @@ int process_text_singlebuf(FILE *in_file, FILE *out_file) {
 	pvector_sort(&lines_arr, strings_comparator);
 
 	for (size_t i = 0; i < lines_arr.len; i++) {
-		fprintf(out_file, "%s\n", (const char *)lines_arr.arr[i]);
+		fprintf(out_file, "%s\n", *(const char **)pvector_get(&lines_arr, i));
 	}
 	printf("text_lines_cnt: <%zu>\n", lines_arr.len);
 

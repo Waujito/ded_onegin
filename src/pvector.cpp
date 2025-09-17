@@ -1,15 +1,19 @@
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "pvector.h"
 #include "sort.h"
 
 #define PVECTOR_INIT_CAPACITY (128)
 
-int pvector_init(struct pvector *pv) {
+int pvector_init(struct pvector *pv, size_t el_size) {
 	assert (pv);
+	assert (el_size);
 
 	pv->arr = NULL;
+	pv->el_size = el_size;
 	pv->capacity = 0;
 	pv->len = 0;
 
@@ -33,12 +37,12 @@ int pvector_set_capacity(struct pvector *pv, size_t new_cap) {
 		return -1;
 	}
 
-	if (new_cap < PVECTOR_INIT_CAPACITY) {
+	if (new_cap == 0) {
 		   new_cap = PVECTOR_INIT_CAPACITY;
 	}
 
-	void **new_arr = (void **)realloc(pv->arr, 
-			    new_cap * sizeof (void *));
+	char *new_arr = (char *)realloc(pv->arr, 
+			    new_cap * pv->el_size);
 	if (!new_arr) {
 		return -1;
 	}
@@ -54,7 +58,7 @@ int pvector_destroy(struct pvector *pv) {
 
 	if (pv->destructor) {
 		for (size_t i = 0; i < pv->len; i++) {
-			pv->destructor(pv->arr[i]);
+			pv->destructor(pv->arr + i * pv->el_size);
 		}
 	}
 
@@ -71,11 +75,14 @@ ssize_t pvector_push_back(struct pvector *pv, void *ptr) {
 
 	if (pv->len >= pv->capacity) {
 		size_t new_cap = pv->capacity * 2;
-		pvector_set_capacity(pv, new_cap);
+		if (pvector_set_capacity(pv, new_cap)) {
+			return -1;
+		}
 	}
 
 	size_t idx = pv->len++;
-	pv->arr[idx] = ptr;
+	char *el_pos = pv->arr + idx * pv->el_size;
+	memcpy(el_pos, ptr, pv->el_size);
 
 	return (ssize_t) idx;
 }
@@ -88,6 +95,10 @@ int pvector_pop_back(struct pvector *pv) {
 	}
 
 	pv->len--;
+	if (pv->destructor) {
+		char *el_ptr = pv->arr + pv->len * pv->el_size;
+		pv->destructor(el_ptr);
+	}
 
 	if (pv->len <= pv->capacity / 4) {
 		pvector_set_capacity(pv, pv->len);
@@ -109,19 +120,26 @@ void *pvector_get(struct pvector *pv, size_t idx) {
 		return NULL;
 	}
 
-	return pv->arr[idx];
+	return pv->arr + idx * pv->el_size;
 }
 
 int pvector_bubble_sort(struct pvector *lines_arr, alg_sorting_comparator comparator) {
 	assert (lines_arr);
 	assert (comparator);
 
-	return alg_bubble_sort(lines_arr->arr, lines_arr->len, sizeof (void *), comparator);
+	return alg_bubble_sort(lines_arr->arr, lines_arr->len, lines_arr->el_size, comparator);
 }
 
 int pvector_merge_sort(struct pvector *lines_arr, alg_sorting_comparator comparator) {
 	assert (lines_arr);
 	assert (comparator);
 
-	return alg_merge_sort(lines_arr->arr, lines_arr->len, sizeof (void *), comparator);
+	return alg_merge_sort(lines_arr->arr, lines_arr->len, lines_arr->el_size, comparator);
+}
+
+int pvector_quick_sort(struct pvector *lines_arr, alg_sorting_comparator comparator) {
+	assert (lines_arr);
+	assert (comparator);
+
+	return alg_quick_sort(lines_arr->arr, lines_arr->len, lines_arr->el_size, comparator);
 }

@@ -84,7 +84,7 @@ int parse_args(int argc, const char *argv[],
 	assert(callback);
 
 	for (int argi = 1; argi < argc; argi++) {
-		struct args_context ctx = {0};
+		struct args_context ctx = {{0}};
 		
 		for (int opti = 0; opts[opti].name; opti++) {
 			enum lookup_option_status ret = lookup_for_option(

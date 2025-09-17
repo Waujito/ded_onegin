@@ -6,14 +6,15 @@
 
 typedef void (*pvector_el_destructor_t)(void *);
 struct pvector {
-	void **arr;
+	char *arr;
 	size_t capacity;
 	size_t len;
+	size_t el_size;
 
 	pvector_el_destructor_t destructor;
 };
 
-int pvector_init(struct pvector *pv);
+int pvector_init(struct pvector *pv, size_t el_size);
 int pvector_set_destructor(struct pvector *pv, pvector_el_destructor_t destructor);
 
 int pvector_set_capacity(struct pvector *pv, size_t new_cap);

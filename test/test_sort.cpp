@@ -1,4 +1,4 @@
-#include "test_config.h"
+#include "test_config.h" // IWYU pragma: keep
 
 #include "pvector.h"
 #include "sort.h"
@@ -47,17 +47,18 @@ static void test_pv_sorting_function(pv_sorting_function sorting_fn) {
 	int ret = 0;
 	
 	pvector arr = {0};
-	ret = pvector_init(&arr);
+	ret = pvector_init(&arr, sizeof (void *));
 	ASSERT_EQ(ret, 0);
 
 	for (size_t i = 0; i < arr_sz; i++) {
-		pvector_push_back(&arr, (void *)(a + i));
+		void *el = a + i;
+		pvector_push_back(&arr, &el);
 	}
 
 	sorting_fn(&arr, pv_int_comparator);
 
 	for (size_t i = 0; i < arr_sz; i++) {
-		ASSERT_EQ(*(int *)arr.arr[i], sorted[i]);
+		ASSERT_EQ(**(int **)pvector_get(&arr, i), sorted[i]);
 	}
 
 	pvector_destroy(&arr);
