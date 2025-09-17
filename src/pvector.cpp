@@ -70,6 +70,22 @@ int pvector_destroy(struct pvector *pv) {
 	return 0;
 }
 
+int pvector_clone(const struct pvector *pv, struct pvector *npv) {
+	char *arr = (char *)calloc(pv->len * pv->el_size, sizeof(char));
+	if (!arr) {
+		return -1;
+	}
+
+	npv->arr = arr;
+	npv->len = pv->len;
+	npv->capacity = pv->len;
+	npv->el_size = pv->el_size;
+
+	memcpy(npv->arr, pv->arr, pv->len * pv->el_size);
+
+	return 0;
+}
+
 ssize_t pvector_push_back(struct pvector *pv, void *ptr) {
 	assert (pv);
 
@@ -107,13 +123,13 @@ int pvector_pop_back(struct pvector *pv) {
 	return 0;
 }
 
-int pvector_has(struct pvector *pv, size_t idx) {
+int pvector_has(const struct pvector *pv, size_t idx) {
 	assert(pv);
 
 	return idx < pv->len;
 }
 
-void *pvector_get(struct pvector *pv, size_t idx) {
+void *pvector_get(const struct pvector *pv, size_t idx) {
 	assert(pv);
 
 	if (idx >= pv->len) {

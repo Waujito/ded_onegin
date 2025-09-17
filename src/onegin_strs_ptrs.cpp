@@ -1,5 +1,7 @@
 /**
+ * !!!NOTE!!!
  * Stores lines in a array of pointers to strings
+ * An educational version, so no new features will be provided for it.
  */
 
 #include <stdio.h>
