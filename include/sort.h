@@ -1,23 +1,28 @@
 #ifndef SORT_H
 #define SORT_H
 
-#include "pvector.h"
+#include <stdlib.h>
 
-typedef int (*pv_sort_comparator)(const void *, const void *);
+typedef int (*alg_sorting_comparator)(const void *, const void *);
 
-typedef int (*pv_sorting_function)(struct pvector *lines_arr, 
-				   pv_sort_comparator comparator);
+typedef int (*alg_sorting_function)(void *arr, size_t n, size_t size,
+					alg_sorting_comparator comparator);
 
-int pvector_bubble_sort(struct pvector *lines_arr, 
-			pv_sort_comparator comparator);
 
-int pvector_merge_sort(pvector *lines_arr,
-		       pv_sort_comparator comparator);
+int alg_bubble_sort(void *arr, size_t nmemb, size_t size,
+			alg_sorting_comparator comparator);
 
-static inline int pvector_sort(struct pvector *lines_arr, 
-			       pv_sort_comparator comparator) {
-	// return pvector_bubble_sort(lines_arr, comparator);
-	return pvector_merge_sort(lines_arr, comparator);
+int alg_merge_sort(void *arr, size_t nmemb, size_t size,
+		       alg_sorting_comparator comparator);
+
+int alg_quick_sort(void *arr, size_t nmemb, size_t size,
+		       alg_sorting_comparator comparator);
+
+
+static inline int alg_sort(void *arr, size_t nmemb, size_t size,
+			       alg_sorting_comparator comparator) {
+	// return alg_bubble_sort(arr, n, size, comparator);
+	return alg_merge_sort(arr, nmemb, size, comparator);
 }
 
 #endif /* SORT_H */

@@ -11,7 +11,6 @@
 #include "onegin.h"
 #include "comparator.h"
 #include "pvector.h"
-#include "sort.h"
 
 int process_text_singlebuf(FILE *in_file, FILE *out_file) {
 	assert(in_file); 	

@@ -18,8 +18,8 @@ int strings_comparator(const void *a1, const void *a2) {
 	assert (a1);
 	assert (a2);
 
-	const char *t1 = (const char *)a1;
-	const char *t2 = (const char *)a2;
+	const char *t1 = *(const char *const *)a1;
+	const char *t2 = *(const char *const *)a2;
 
 	do {
 		if (*t1 != *t2) {

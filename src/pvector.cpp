@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #include "pvector.h"
+#include "sort.h"
 
 #define PVECTOR_INIT_CAPACITY (128)
 
@@ -109,4 +110,18 @@ void *pvector_get(struct pvector *pv, size_t idx) {
 	}
 
 	return pv->arr[idx];
+}
+
+int pvector_bubble_sort(struct pvector *lines_arr, alg_sorting_comparator comparator) {
+	assert (lines_arr);
+	assert (comparator);
+
+	return alg_bubble_sort(lines_arr->arr, lines_arr->len, sizeof (void *), comparator);
+}
+
+int pvector_merge_sort(struct pvector *lines_arr, alg_sorting_comparator comparator) {
+	assert (lines_arr);
+	assert (comparator);
+
+	return alg_merge_sort(lines_arr->arr, lines_arr->len, sizeof (void *), comparator);
 }

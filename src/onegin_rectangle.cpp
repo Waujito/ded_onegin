@@ -109,7 +109,7 @@ static int vectorized_swap(char *p1, char *p2, size_t sz) {
 	return 0;
 }
 
-#undef ES_SWAP_BYTES 
+#undef ES_SWAP_BYTES
 
 static int strings_sort(char *text_array, size_t line_width, size_t lines_cnt) {
 	assert (text_array);

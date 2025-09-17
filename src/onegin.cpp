@@ -4,7 +4,7 @@
 #include "onegin.h"
 #include "argparse.h"
 
-static const char *DEFAULT_INPUT_FILENAME	= "onegin_english.txt";
+static const char *DEFAULT_INPUT_FILENAME	= "textonegin.txt";
 static const char *DEFAULT_OUTPUT_FILENAME	= ".out.onegin_english.txt";
 
 enum arg_options {
