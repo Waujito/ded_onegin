@@ -7,17 +7,23 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <sys/stat.h>
 
 #include "onegin.h"
 #include "comparator.h"
 #include "pvector.h"
 
-int process_text_singlebuf(FILE *in_file, FILE *out_file) {
-	assert(in_file); 	
-	assert(out_file);
+ssize_t get_file_size(FILE *file) {
+#ifndef FGETSIZE_USE_FSEEK
+	struct stat file_stat = {0};
+	int ret = fstat(fileno(file), &file_stat);
+	if (ret) {
+		perror("fstat");
+		return -1;
+	}
 
-	int ret = 0;	
-
+	return file_stat.st_size;
+#else /* FGETSIZE_USE_FSEEK */
 	ret = fseek(in_file, 0, SEEK_END);
 	if (ret) {
 		perror("fseek to end");
@@ -36,6 +42,21 @@ int process_text_singlebuf(FILE *in_file, FILE *out_file) {
 		return -1;
 	}
 
+	return fsize;
+#endif /* FGETSIZE_USE_FSEEK */
+}
+
+int process_text_singlebuf(FILE *in_file, FILE *out_file) {
+	assert(in_file); 
+	assert(out_file);
+
+	int ret = 0;
+
+	ssize_t fsize = get_file_size(in_file);
+	if (fsize < 0) {
+		return -1;
+	}
+
 	char *text_stream = (char *)calloc((size_t) fsize, sizeof (char));
 	if (!text_stream) {
 		perror("text arr alloc");
@@ -43,8 +64,8 @@ int process_text_singlebuf(FILE *in_file, FILE *out_file) {
 	}
 	
 	size_t read_bytes = fread(text_stream, sizeof (char), (size_t) fsize, in_file);
-	if (read_bytes != (size_t) fsize) {
-		perror("fread bytes");
+	if (ferror(in_file)) {
+		perror("fread ferror");
 
 		free(text_stream);
 		return -1;
@@ -58,6 +79,14 @@ int process_text_singlebuf(FILE *in_file, FILE *out_file) {
 		free(text_stream);
 		return -1;
 	}
+
+	size_t nlines = 1;
+	for (size_t i = 0; i < read_bytes; i++) {
+		if (text_stream[i] == '\n')
+			nlines++;
+	}
+
+	pvector_set_capacity(&lines_arr, nlines + 1);
 
 	char *start_lineptr = text_stream;
 	char *cur_lineptr = start_lineptr;
