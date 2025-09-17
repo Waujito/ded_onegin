@@ -72,25 +72,7 @@ int main(int argc, const char *argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	FILE *in_text_file = fopen(ctx.in_filename, "rb");
-	if (!in_text_file) {
-		fmtperror("Cannot read file %s", ctx.in_filename);
-
-		return EXIT_FAILURE;
-	}
-
-	FILE *out_text_file = fopen(ctx.out_filename, "wb");
-	if (!out_text_file) {
-		fmtperror("Cannot read file %s", ctx.out_filename);
-
-		fclose(in_text_file);
-		return EXIT_FAILURE;
-	}
-
-	ret = process_text(in_text_file, out_text_file);
-
-	fclose(in_text_file);
-	fclose(out_text_file);
+	ret = process_text(ctx.in_filename, ctx.out_filename);
 
 	return 0;
 }

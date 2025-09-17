@@ -80,9 +80,9 @@ static int strings_sort(char *text_array, size_t line_width, size_t lines_cnt) {
 		char *a1 = text_array + i * line_width;
 		for (size_t j = 0; j < i; j++) {
 			char *a2 = text_array + j * line_width;
-			int cmp = strings_comparator(a1, a2);
+			int cmp = strings_comparator(&a1, &a2);
 
-			if (!cmp) {
+			if (cmp < 0) {
 				vectorized_swap(a1, a2, line_width);
 			}
 		}
@@ -91,7 +91,7 @@ static int strings_sort(char *text_array, size_t line_width, size_t lines_cnt) {
 	return 0;
 }
 
-int process_text_rectangle(FILE *in_file, FILE *out_file) {
+static int process_text_rectangle_ptrs(FILE *in_file, FILE *out_file) {
 	assert (in_file); 	
 	assert (out_file);
 
@@ -149,4 +149,26 @@ int process_text_rectangle(FILE *in_file, FILE *out_file) {
 	free(text_buffer);
 
 	return 0;
+}
+
+int process_text_rectangle(const char *in_filename, const char *out_filename) {
+	FILE *in_file = fopen(in_filename, "rb");
+	if (!in_file) {
+		perror("fopen");
+		return -1;
+	}
+
+	FILE *out_file = fopen(out_filename, "wb");
+	if  (!out_file) {
+		perror("fopen");
+		fclose(in_file);
+		return -1;
+	}
+
+	int ret = process_text_rectangle_ptrs(in_file, out_file);
+
+	fclose(out_file);
+	fclose(in_file);
+
+	return ret;
 }

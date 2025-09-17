@@ -23,6 +23,7 @@ static inline int alg_sort(void *arr, size_t nmemb, size_t size,
 			       alg_sorting_comparator comparator) {
 	// return alg_bubble_sort(arr, n, size, comparator);
 	return alg_merge_sort(arr, nmemb, size, comparator);
+	// return alg_quick_sort(arr, nmemb, size, comparator);
 }
 
 #endif /* SORT_H */

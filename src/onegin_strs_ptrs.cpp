@@ -19,7 +19,7 @@ static void pvector_str_destructor(void *el) {
 	free(str);
 }
 
-int process_text_strs_ptrs(FILE *in_file, FILE *out_file) {
+static int process_text_strs_ptrs_fp(FILE *in_file, FILE *out_file) {
 	assert (in_file); 	
 	assert (out_file);
 
@@ -79,4 +79,26 @@ int process_text_strs_ptrs(FILE *in_file, FILE *out_file) {
 	pvector_destroy(&lines_arr);
 
 	return 0;
+}
+
+int process_text_strs_ptrs(const char *in_filename, const char *out_filename) {
+	FILE *in_file = fopen(in_filename, "rb");
+	if (!in_file) {
+		perror("fopen");
+		return -1;
+	}
+
+	FILE *out_file = fopen(out_filename, "wb");
+	if  (!out_file) {
+		perror("fopen");
+		fclose(in_file);
+		return -1;
+	}
+
+	int ret = process_text_strs_ptrs_fp(in_file, out_file);
+
+	fclose(out_file);
+	fclose(in_file);
+
+	return ret;
 }

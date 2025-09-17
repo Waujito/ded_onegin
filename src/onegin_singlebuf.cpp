@@ -49,15 +49,26 @@ static ssize_t get_file_size(FILE *file) {
 }
 
 static int read_file(const char *filename, char **bufptr, size_t *read_bytes_ptr) {
+	assert (filename);
+	assert (bufptr);
+	assert (read_bytes_ptr);
+
 	FILE *file = fopen(filename, "rb");
+	if (!file) {
+		perror("fopen");
+		return -1;
+	}
+
 	ssize_t fsize = get_file_size(file);
 	if (fsize < 0) {
+		fclose(file);
 		return -1;
 	}
 
 	char *text_buf = (char *)calloc((size_t) fsize + 1, sizeof(char));
 	if (!text_buf) {
 		perror("text arr alloc");
+		fclose(file);
 		return -1;
 	}
 	
@@ -66,13 +77,17 @@ static int read_file(const char *filename, char **bufptr, size_t *read_bytes_ptr
 		perror("fread ferror");
 
 		free(text_buf);
+		fclose(file);
 		return -1;
 	}
 	text_buf[read_bytes] = '\0';
+	read_bytes++;
 
 	*bufptr = text_buf;
 
 	*read_bytes_ptr = read_bytes;
+
+	fclose(file);
 
 	return 0;
 }
@@ -126,36 +141,67 @@ static size_t count_lines(char *text_buf, size_t buflen) {
 	return nlines;
 }
 
-int process_text_singlebuf(FILE *in_file, FILE *out_file) {
+static int print_to_file(const char *out_filename, 
+		      const struct pvector *backward_onegin, 
+		      const struct pvector *forward_onegin, 
+		      const struct pvector *real_onegin) {
+	FILE *out_file = fopen(out_filename, "wb");
+	if (!out_file) {
+		return -1;
+	}
+
+	fprintf(out_file, 
+		"-------BEGIN-------"	"\n"
+		"-------FORWARD ONEGIN-------"
+		"\n"
+	);
+	for (size_t i = 0; i < forward_onegin->len; i++) {
+		struct onegin_line *o_line = (struct onegin_line *)pvector_get(forward_onegin, i);
+		fprintf(out_file, "%s\n", o_line->line_ptr);
+	}
+	fprintf(out_file, 
+		"\n"
+		"-------BACKWARD ONEGIN-------"
+		"\n"
+	);
+	for (size_t i = 0; i < backward_onegin->len; i++) {
+		struct onegin_line *o_line = (struct onegin_line *)pvector_get(backward_onegin, i);
+		fprintf(out_file, "%s\n", o_line->line_ptr);
+	}	
+	fprintf(out_file, 
+		"\n"
+		"-------REAL ONEGIN-------"
+		"\n"
+	);
+	for (size_t i = 0; i < real_onegin->len; i++) {
+		struct onegin_line *o_line = (struct onegin_line *)pvector_get(real_onegin, i);
+		fprintf(out_file, "%s\n", o_line->line_ptr);
+	}
+	fprintf(out_file, 
+		"-------END-------"
+	);
+
+	fclose(out_file);
+
+	return 0;
+}
+
+int process_text_singlebuf(const char *in_filename, const char *out_filename) {
 	int ret = 0;
 
-	ssize_t fsize = get_file_size(in_file);
-	if (fsize < 0) {
+	char *text_buf = NULL;
+	size_t read_bytes = 0;
+
+	if (read_file(in_filename, &text_buf, &read_bytes)) {
 		return -1;
 	}
-
-	char *text_buf = (char *)calloc((size_t) fsize + 1, sizeof(char));
-	if (!text_buf) {
-		perror("text arr alloc");
-		return -1;
-	}
-	
-	size_t read_bytes = fread(text_buf, sizeof(char), (size_t)fsize, in_file);
-	if (ferror(in_file)) {
-		perror("fread ferror");
-
-		free(text_buf);
-		return -1;
-	}
-	text_buf[read_bytes] = '\0';
-	read_bytes++;
-
 	struct pvector lines_arr = {0};
 	ret = pvector_init(&lines_arr, sizeof(struct onegin_line));
 	if (ret) {
 		perror("pvector_init");
 
 		free(text_buf);
+
 		return -1;
 	}
 
@@ -163,9 +209,10 @@ int process_text_singlebuf(FILE *in_file, FILE *out_file) {
 
 	pvector_set_capacity(&lines_arr, nlines + 1);
 
-	if (read_lines(text_buf, read_bytes + 1, &lines_arr)) {
+	if (read_lines(text_buf, read_bytes, &lines_arr)) {
 		pvector_destroy(&lines_arr);
 		free(text_buf);
+
 		return -1;
 	}
 
@@ -175,55 +222,33 @@ int process_text_singlebuf(FILE *in_file, FILE *out_file) {
 	if (pvector_clone(&forward_arr, &lines_arr)) {
 		pvector_destroy(&lines_arr);
 		free(text_buf);
+
 		return -1;
 	}
 
 	struct pvector backward_arr = {0};
-	if (pvector_clone(&forward_arr, &lines_arr)) {
+	if (pvector_clone(&backward_arr, &lines_arr)) {
 		pvector_destroy(&forward_arr);
 		pvector_destroy(&lines_arr);
 		free(text_buf);
+
 		return -1;
 	}
 
-	pvector_sort(&forward_arr, forward_string_comparator);
-	pvector_sort(&backward_arr, backward_string_comparator);
-
-	fprintf(out_file, 
-		"-------BEGIN-------"	"\n"
-		"-------FORWARD ONEGIN-------"
-		"\n"
-	);
-	for (size_t i = 0; i < forward_arr.len; i++) {
-		struct onegin_line *o_line = (struct onegin_line *)pvector_get(&forward_arr, i);
-		fprintf(out_file, "%s\n", o_line->line_ptr);
+	if ((ret = pvector_sort(&forward_arr, forward_string_comparator))) {
+		goto close_and_return;
 	}
-	fprintf(out_file, 
-		"\n"
-		"-------BACKWARD ONEGIN-------"
-		"\n"
-	);
-	for (size_t i = 0; i < backward_arr.len; i++) {
-		struct onegin_line *o_line = (struct onegin_line *)pvector_get(&backward_arr, i);
-		fprintf(out_file, "%s\n", o_line->line_ptr);
-	}	
-	fprintf(out_file, 
-		"\n"
-		"-------REAL ONEGIN-------"
-		"\n"
-	);
-	for (size_t i = 0; i < lines_arr.len; i++) {
-		struct onegin_line *o_line = (struct onegin_line *)pvector_get(&lines_arr, i);
-		fprintf(out_file, "%s\n", o_line->line_ptr);
+	if ((ret = pvector_sort(&backward_arr, backward_string_comparator))) {
+		goto close_and_return;
 	}
-	fprintf(out_file, 
-		"-------END-------"
-	);
 
+	ret = print_to_file(out_filename, &backward_arr, &forward_arr, &lines_arr);
+
+close_and_return:
 	pvector_destroy(&backward_arr);
 	pvector_destroy(&forward_arr);
 	pvector_destroy(&lines_arr);
 	free(text_buf);
 
-	return 0;
+	return ret;
 }
