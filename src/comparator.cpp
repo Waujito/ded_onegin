@@ -51,6 +51,52 @@ static inline __attribute__((__always_inline__)) void skip_no_letter(const char 
 	}
 }
 
+int backward_string_comparator(const void *a1, const void *a2) {
+	assert (a1);
+	assert (a2);
+
+	const struct onegin_line *ln1 = (const struct onegin_line *)a1;
+	const struct onegin_line *ln2 = (const struct onegin_line *)a2;
+
+	const char *t1 = ln1->line_ptr;
+	const char *t2 = ln2->line_ptr;
+	int ret = 0;
+
+	do {
+		skip_no_letter(&t1);
+		skip_no_letter(&t2);
+
+		if ((ret = compare_chars(*t1, *t2)) != 0) {
+			return ret;
+		}
+	} while (*(t1++) != '\0' && *(t2++) != '\0');
+
+	return 0;
+}
+
+int forward_string_comparator(const void *a1, const void *a2) {
+	assert (a1);
+	assert (a2);
+
+	const struct onegin_line *ln1 = (const struct onegin_line *)a1;
+	const struct onegin_line *ln2 = (const struct onegin_line *)a2;
+
+	const char *t1 = ln1->line_ptr;
+	const char *t2 = ln2->line_ptr;
+	int ret = 0;
+
+	do {
+		skip_no_letter(&t1);
+		skip_no_letter(&t2);
+
+		if ((ret = compare_chars(*t1, *t2)) != 0) {
+			return ret;
+		}
+	} while (*(t1++) != '\0' && *(t2++) != '\0');
+
+	return 0;
+}
+
 int strings_comparator(const void *a1, const void *a2) {
 	assert (a1);
 	assert (a2);

@@ -72,7 +72,7 @@ int process_text_singlebuf(FILE *in_file, FILE *out_file) {
 	}
 
 	struct pvector lines_arr = {0};
-	ret = pvector_init(&lines_arr, sizeof (void *));
+	ret = pvector_init(&lines_arr, sizeof (struct onegin_line));
 	if (ret) {
 		perror("pvector_init");
 
@@ -89,6 +89,7 @@ int process_text_singlebuf(FILE *in_file, FILE *out_file) {
 	pvector_set_capacity(&lines_arr, nlines + 1);
 
 	char *start_lineptr = text_stream;
+	size_t line_sz = 0;
 	char *cur_lineptr = start_lineptr;
 	size_t left_size = read_bytes;
 
@@ -99,28 +100,37 @@ int process_text_singlebuf(FILE *in_file, FILE *out_file) {
 
 			if (!filter_lines(start_lineptr)) {
 				start_lineptr = cur_lineptr + 1;
+				line_sz = 0;
 				cur_lineptr++;
 				left_size--;
 				continue;
 			}
 
-			if (pvector_push_back(&lines_arr, &start_lineptr) < 0) {
+			struct onegin_line o_line = {
+				.line_ptr = start_lineptr,
+				.line_sz = line_sz,
+			};
+
+			if (pvector_push_back(&lines_arr, &o_line) < 0) {
 				pvector_destroy(&lines_arr);
 				free(text_stream);
 				return -1;
 			}
 
 			start_lineptr = cur_lineptr + 1;
+			line_sz = 0;
 		}
 
 		cur_lineptr++;
+		line_sz++;
 		left_size--;
 	}
 
-	pvector_sort(&lines_arr, strings_comparator);
+	pvector_sort(&lines_arr, backward_string_comparator);
 
 	for (size_t i = 0; i < lines_arr.len; i++) {
-		fprintf(out_file, "%s\n", *(const char **)pvector_get(&lines_arr, i));
+		struct onegin_line *o_line = (struct onegin_line *)pvector_get(&lines_arr, i);
+		fprintf(out_file, "%s\n", o_line->line_ptr);
 	}
 	printf("text_lines_cnt: <%zu>\n", lines_arr.len);
 
