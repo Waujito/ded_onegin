@@ -37,10 +37,10 @@ typedef int (*pv_sorting_function)(struct pvector *lines_arr,
 int pvector_bubble_sort(struct pvector *lines_arr,
 			alg_sorting_comparator comparator);
 
-int pvector_merge_sort(pvector *lines_arr,
+int pvector_merge_sort(struct pvector *lines_arr,
 		       alg_sorting_comparator comparator);
 
-int pvector_quick_sort(pvector *lines_arr,
+int pvector_quick_sort(struct pvector *lines_arr,
 		       alg_sorting_comparator comparator);
 
 static inline int pvector_sort(struct pvector *lines_arr,
