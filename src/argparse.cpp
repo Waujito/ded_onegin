@@ -5,6 +5,7 @@
  */
 #include <assert.h>
 
+#include "types.h"
 #include "argparse.h"
 
 enum lookup_option_status {
@@ -105,9 +106,12 @@ int parse_args(int argc, const char *argv[],
 			ctx.context = context;
 			int ret = callback(ctx);
 			if (ret) {
+				log_error("Parsing callback error in argument %s\n", 
+						argv[argi]);
 				return -argi;
 			}
 		} else {
+			log_error("Unknown argument %s\n", argv[argi]);
 			return -argi;
 		}
 

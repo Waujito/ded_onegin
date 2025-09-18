@@ -4,8 +4,9 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "vectorized_swap.h"
+#include "types.h"
 
+#include "vectorized_swap.h"
 #include "sort.h"
 
 int alg_bubble_sort(void *arr, size_t nmemb, size_t size,
@@ -85,7 +86,7 @@ int alg_merge_sort(void *arr, size_t nmemb, size_t size,
 
 	void *mergedVectors = calloc(nmemb, size);
 	if (!mergedVectors) {
-		perror("calloc mergedVectors");
+		log_perror("calloc mergedVectors");
 		return -1;
 	}
 

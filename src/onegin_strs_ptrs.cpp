@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#include "types.h"
+
 #include "onegin.h"
 #include "comparator.h"
 #include "pvector.h"
@@ -28,7 +30,7 @@ static int process_text_strs_ptrs_fp(FILE *in_file, FILE *out_file) {
 	struct pvector lines_arr = {0};
 	ret = pvector_init(&lines_arr, sizeof (void *));
 	if (ret) {
-		perror("pvector_init");
+		log_perror("pvector_init");
 		return -1;
 	}
 
@@ -36,7 +38,7 @@ static int process_text_strs_ptrs_fp(FILE *in_file, FILE *out_file) {
 	if (ret) {
 		pvector_destroy(&lines_arr);
 
-		perror("pvector_set_destructor");
+		log_perror("pvector_set_destructor");
 		return -1;
 	}
 
@@ -63,7 +65,7 @@ static int process_text_strs_ptrs_fp(FILE *in_file, FILE *out_file) {
 	lineptr = NULL;
 
 	if (errno) {
-		perror("Text buffer error");
+		log_perror("Text buffer error");
 
 		pvector_destroy(&lines_arr);
 		return -1;
@@ -84,13 +86,13 @@ static int process_text_strs_ptrs_fp(FILE *in_file, FILE *out_file) {
 int process_text_strs_ptrs(const char *in_filename, const char *out_filename) {
 	FILE *in_file = fopen(in_filename, "rb");
 	if (!in_file) {
-		perror("fopen");
+		log_perror("fopen");
 		return -1;
 	}
 
 	FILE *out_file = fopen(out_filename, "wb");
 	if  (!out_file) {
-		perror("fopen");
+		log_perror("fopen");
 		fclose(in_file);
 		return -1;
 	}

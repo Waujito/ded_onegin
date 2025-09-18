@@ -12,6 +12,8 @@
 
 #include "vectorized_swap.h"
 
+#include "types.h"
+
 #include "onegin.h"
 #include "comparator.h"
 
@@ -45,7 +47,7 @@ static int lookup_file_parameters(FILE *text_file,
 	}
 
 	if (errno) {
-		perror("lookup error");
+		log_perror("lookup error");
 
 		free(lineptr);
 		return -1;
@@ -61,7 +63,7 @@ static int lookup_file_parameters(FILE *text_file,
 	/* Move file position indicator to the begginning of the file */
 	int ret = fseek(text_file, 0, SEEK_SET);
 	if (ret) {
-		perror("fseek to start");
+		log_perror("fseek to start");
 
 		free(lineptr);
 		return -1;
@@ -109,7 +111,7 @@ static int process_text_rectangle_ptrs(FILE *in_file, FILE *out_file) {
 	char *text_buffer = (char *) calloc(text_buffer_len, sizeof(char));
 
 	if (!text_buffer) {
-		perror("text buffer allocation error");
+		log_perror("text buffer allocation error");
 
 		return -1;
 	}
@@ -131,7 +133,7 @@ static int process_text_rectangle_ptrs(FILE *in_file, FILE *out_file) {
 	}
 
 	if (errno) {
-		perror("Text buffer error");
+		log_perror("Text buffer error");
 
 		free(text_buffer);
 		return -1;
@@ -154,13 +156,13 @@ static int process_text_rectangle_ptrs(FILE *in_file, FILE *out_file) {
 int process_text_rectangle(const char *in_filename, const char *out_filename) {
 	FILE *in_file = fopen(in_filename, "rb");
 	if (!in_file) {
-		perror("fopen");
+		log_perror("fopen");
 		return -1;
 	}
 
 	FILE *out_file = fopen(out_filename, "wb");
 	if  (!out_file) {
-		perror("fopen");
+		log_perror("fopen");
 		fclose(in_file);
 		return -1;
 	}

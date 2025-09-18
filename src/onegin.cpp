@@ -1,11 +1,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "types.h"
+
 #include "onegin.h"
 #include "argparse.h"
 
-static const char *DEFAULT_INPUT_FILENAME	= "textonegin.txt";
-static const char *DEFAULT_OUTPUT_FILENAME	= ".out.onegin_english.txt";
+#define DEFAULT_INPUT_FILENAME	"textonegin.txt"
+#define DEFAULT_OUTPUT_FILENAME	".out.onegin_english.txt"
 
 enum arg_options {
 	OPT_HELP		= 0,
@@ -30,19 +32,29 @@ static void init_program_ctx(struct program_context *ctx) {
 	ctx->out_filename = DEFAULT_OUTPUT_FILENAME;
 }
 
+const char *help_string =	"Sorts strings in poems\n"
+				"\n"			
+				"Possible flags:\n"			
+				"--input filename - An input filename. Defaults to "	
+				DEFAULT_INPUT_FILENAME "\n"
+				"--output filename - An output filename. Defaults to "	
+				DEFAULT_OUTPUT_FILENAME "\n";
+				
+
 static int arg_callback(struct args_context ctx) {
-	printf("Option %s ", ctx.opt.name);
+	log_debug("\nOption %s ", ctx.opt.name);
 	if (ctx.value) {
-		printf("with value %s", ctx.value);
+		log_debug("with value %s", ctx.value);
 	}
-	printf("\n");
+	log_debug("\n\n");
 
 	struct program_context *pg_ctx = (struct program_context *)ctx.context;
 
 	enum arg_options opt_val = (enum arg_options) ctx.opt.val;
 	switch (opt_val) {
 		case OPT_HELP:
-			eprintf("Hellp!\n");
+			printf("%s\n", help_string);
+			exit(EXIT_SUCCESS);
 			break;
 		case OPT_IN_FILENAME:
 			pg_ctx->in_filename = ctx.value;
@@ -51,7 +63,7 @@ static int arg_callback(struct args_context ctx) {
 			pg_ctx->out_filename = ctx.value;
 			break;
 		default:
-			eprintf("Undefined argument\n");
+			log_perror("Undefined argument\n");
 			return -1;
 	}
 
@@ -68,7 +80,6 @@ int main(int argc, const char *argv[]) {
 
 	ret = parse_args(argc, argv, opts, arg_callback, &ctx);
 	if (ret) {
-		printf("What the f... error ^_^ %d\n", ret);
 		return EXIT_FAILURE;
 	}
 

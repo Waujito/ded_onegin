@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <sys/stat.h>
 
+#include "types.h"
 #include "onegin.h"
 #include "comparator.h"
 #include "pvector.h"
@@ -20,7 +21,7 @@ static ssize_t get_file_size(FILE *file) {
 	struct stat file_stat = {0};
 	int ret = fstat(fileno(file), &file_stat);
 	if (ret) {
-		perror("fstat");
+		log_perror("get_file_size fstat");
 		return -1;
 	}
 
@@ -28,19 +29,19 @@ static ssize_t get_file_size(FILE *file) {
 #else /* FGETSIZE_USE_FSEEK */
 	ret = fseek(in_file, 0, SEEK_END);
 	if (ret) {
-		perror("fseek to end");
+		log_perror("fseek to end");
 		return -1;
 	}
 
 	long fsize = ftell(in_file);
 	if (fsize < 0) {
-		perror("ftell");
+		log_perror("ftell");
 		return -1;
 	}
 
 	ret = fseek(in_file, 0, SEEK_SET);
 	if (ret) {
-		perror("fseek to start");
+		log_perror("fseek to start");
 		return -1;
 	}
 
@@ -55,7 +56,7 @@ static int read_file(const char *filename, char **bufptr, size_t *read_bytes_ptr
 
 	FILE *file = fopen(filename, "rb");
 	if (!file) {
-		perror("fopen");
+		log_perror("fopen(%s, \"rb\")", filename);
 		return -1;
 	}
 
@@ -67,14 +68,14 @@ static int read_file(const char *filename, char **bufptr, size_t *read_bytes_ptr
 
 	char *text_buf = (char *)calloc((size_t) fsize + 1, sizeof(char));
 	if (!text_buf) {
-		perror("text arr alloc");
+		log_perror("text arr alloc");
 		fclose(file);
 		return -1;
 	}
 	
 	size_t read_bytes = fread(text_buf, sizeof(char), (size_t) fsize, file);
 	if (ferror(file)) {
-		perror("fread ferror");
+		log_perror("fread ferror");
 
 		free(text_buf);
 		fclose(file);
@@ -151,7 +152,7 @@ static int pvector_read_lines(struct pvector *text_lines, char *buf, size_t bufl
 
 	ret = pvector_init(text_lines, sizeof(struct onegin_line));
 	if (ret) {
-		perror("pvector_init");
+		log_perror("pvector_init");
 		return -1;
 	}
 
