@@ -131,7 +131,9 @@ static int read_lines(char *text_buf, size_t buflen, struct pvector *lines_arr) 
 	return 0;
 }
 
-static size_t count_lines(char *text_buf, size_t buflen) {
+static size_t count_lines(const char *text_buf, size_t buflen) {
+	assert (text_buf);
+
 	size_t nlines = 1;
 	for (size_t i = 0; i < buflen; i++) {
 		if (text_buf[i] == '\n' || text_buf[i] == '\0')
@@ -141,52 +143,48 @@ static size_t count_lines(char *text_buf, size_t buflen) {
 	return nlines;
 }
 
-static int print_to_file(const char *out_filename, 
-		      const struct pvector *backward_onegin, 
-		      const struct pvector *forward_onegin, 
-		      const struct pvector *real_onegin) {
-	FILE *out_file = fopen(out_filename, "wb");
-	if (!out_file) {
+static int pvector_read_lines(struct pvector *text_lines, char *buf, size_t buflen) {
+	assert (text_lines);
+	assert (buf);
+
+	int ret = 0;
+
+	ret = pvector_init(text_lines, sizeof(struct onegin_line));
+	if (ret) {
+		perror("pvector_init");
 		return -1;
 	}
 
-	fprintf(out_file, 
-		"-------BEGIN-------"	"\n"
-		"-------FORWARD ONEGIN-------"
-		"\n"
-	);
-	for (size_t i = 0; i < forward_onegin->len; i++) {
-		struct onegin_line *o_line = (struct onegin_line *)pvector_get(forward_onegin, i);
-		fprintf(out_file, "%s\n", o_line->line_ptr);
-	}
-	fprintf(out_file, 
-		"\n"
-		"-------BACKWARD ONEGIN-------"
-		"\n"
-	);
-	for (size_t i = 0; i < backward_onegin->len; i++) {
-		struct onegin_line *o_line = (struct onegin_line *)pvector_get(backward_onegin, i);
-		fprintf(out_file, "%s\n", o_line->line_ptr);
-	}	
-	fprintf(out_file, 
-		"\n"
-		"-------REAL ONEGIN-------"
-		"\n"
-	);
-	for (size_t i = 0; i < real_onegin->len; i++) {
-		struct onegin_line *o_line = (struct onegin_line *)pvector_get(real_onegin, i);
-		fprintf(out_file, "%s\n", o_line->line_ptr);
-	}
-	fprintf(out_file, 
-		"-------END-------"
-	);
+	size_t nlines = count_lines(buf, buflen);
 
-	fclose(out_file);
+	pvector_set_capacity(text_lines, nlines + 1);
+
+	if (read_lines(buf, buflen, text_lines)) {
+		pvector_destroy(text_lines);
+		return -1;
+	}
+
+	return 0;
+}
+
+static int print_section_ong(FILE *out_file, const char *label, const struct pvector *onegin_text) {
+	assert (out_file);
+	assert (label);
+	assert (onegin_text);
+
+	fprintf(out_file, "-------%s-------\n", label);
+	for (size_t i = 0; i < onegin_text->len; i++) {
+		struct onegin_line *o_line = (struct onegin_line *)pvector_get(onegin_text, i);
+		fprintf(out_file, "%s\n", o_line->line_ptr);
+	}
 
 	return 0;
 }
 
 int process_text_singlebuf(const char *in_filename, const char *out_filename) {
+	assert (in_filename);
+	assert (out_filename);
+
 	int ret = 0;
 
 	char *text_buf = NULL;
@@ -195,56 +193,47 @@ int process_text_singlebuf(const char *in_filename, const char *out_filename) {
 	if (read_file(in_filename, &text_buf, &read_bytes)) {
 		return -1;
 	}
+
 	struct pvector lines_arr = {0};
-	ret = pvector_init(&lines_arr, sizeof(struct onegin_line));
-	if (ret) {
-		perror("pvector_init");
+	struct pvector forward_arr = {0};
+	struct pvector backward_arr = {0};
 
-		free(text_buf);
-
-		return -1;
-	}
-
-	size_t nlines = count_lines(text_buf, read_bytes);
-
-	pvector_set_capacity(&lines_arr, nlines + 1);
-
-	if (read_lines(text_buf, read_bytes, &lines_arr)) {
-		pvector_destroy(&lines_arr);
-		free(text_buf);
-
-		return -1;
+	if ((ret = pvector_read_lines(&lines_arr, text_buf, read_bytes))) {
+		goto exit;
 	}
 
 	printf("text_lines_cnt: <%zu>\n", lines_arr.len);
-
-	struct pvector forward_arr = {0};
-	if (pvector_clone(&forward_arr, &lines_arr)) {
-		pvector_destroy(&lines_arr);
-		free(text_buf);
-
-		return -1;
+	
+	if ((ret = pvector_clone(&forward_arr, &lines_arr))) {
+		goto exit;
 	}
 
-	struct pvector backward_arr = {0};
-	if (pvector_clone(&backward_arr, &lines_arr)) {
-		pvector_destroy(&forward_arr);
-		pvector_destroy(&lines_arr);
-		free(text_buf);
-
-		return -1;
+	if ((ret = pvector_clone(&backward_arr, &lines_arr))) {
+		goto exit;
 	}
 
 	if ((ret = pvector_sort(&forward_arr, forward_string_comparator))) {
-		goto close_and_return;
+		goto exit;
 	}
 	if ((ret = pvector_sort(&backward_arr, backward_string_comparator))) {
-		goto close_and_return;
+		goto exit;
 	}
 
-	ret = print_to_file(out_filename, &backward_arr, &forward_arr, &lines_arr);
+	{
+		FILE *out_file = fopen(out_filename, "wb");
+		if (!out_file) {
+			ret = -1;
+			goto exit;
+		}
 
-close_and_return:
+		print_section_ong(out_file, "FORWARD TEXT",	&forward_arr);
+		print_section_ong(out_file, "BACKWARD TEXT",	&backward_arr);
+		print_section_ong(out_file, "REAL TEXT",	&lines_arr);
+
+		fclose(out_file);
+	}
+
+exit:
 	pvector_destroy(&backward_arr);
 	pvector_destroy(&forward_arr);
 	pvector_destroy(&lines_arr);

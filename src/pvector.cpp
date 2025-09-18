@@ -53,7 +53,9 @@ int pvector_set_capacity(struct pvector *pv, size_t new_cap) {
 }
 
 int pvector_destroy(struct pvector *pv) {
-	assert (pv);
+	if (!pv) {
+		return 0;
+	}
 
 	if (pv->destructor) {
 		for (size_t i = 0; i < pv->len; i++) {
