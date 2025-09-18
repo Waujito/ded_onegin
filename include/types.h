@@ -42,4 +42,24 @@ enum status_codes {
 	#define log_debug(...) (void)0
 #endif /* _DEBUG */
 
+void _i_assert_gdb_fork(void);
+
+#define _i_assert(condition)							\
+	if (!(condition)) {							\
+		eprintf("\nAn assertion %s failed!\n\n", #condition);		\
+		_i_assert_gdb_fork();						\
+										\
+		asm ("int $3");							\
+	}									\
+	(void)0									\
+
+#ifdef _DEBUG
+	#define i_assert(...) _i_assert(__VA_ARGS__)
+#else /* _DEBUG */
+	#define i_assert(...) (void)0
+#endif /* _DEBUG */
+
+#define ct_close(fd) if ((fd) >= 0) close(fd)
+#define ct_fclose(file) if ((file)) fclose(file)
+
 #endif /* TYPES_H */
