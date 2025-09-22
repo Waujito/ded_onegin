@@ -65,37 +65,84 @@ static inline uint32_t forward_read_utf8_char(const char **bptr, size_t *bptr_si
 
 	do {
 		const char cur_ch = **bptr;	
+		(*bptr)++, (*bptr_size)--;
 
-		if ((cur_ch &  UTF8_STREAM_BYTE_MASK) == UTF8_STREAM_BYTE_VALUE) {
+		if ((cur_ch & UTF8_STREAM_BYTE_MASK) == UTF8_STREAM_BYTE_VALUE) {
 			cur_sym <<= UTF8_STREAM_SHIFT;
 			cur_sym += cur_ch & (~UTF8_STREAM_BYTE_MASK);
 
 			if (rb == 0) {
-				// Increment pointers to escape infinite loops
-				(*bptr)++, (*bptr_size)--;
 				return 0;
 			}
 
 			rb--;
-		} else if ((cur_ch &  UTF8_ONE_BYTE_MASK) == UTF8_ONE_BYTE_VALUE) {
+		} else if ((cur_ch & UTF8_ONE_BYTE_MASK) == UTF8_ONE_BYTE_VALUE) {
 			cur_sym = cur_ch & (~UTF8_ONE_BYTE_MASK);
 			rb = 0;
-		} else if ((cur_ch &  UTF8_TWO_BYTE_MASK) == UTF8_TWO_BYTE_VALUE) {
+		} else if ((cur_ch & UTF8_TWO_BYTE_MASK) == UTF8_TWO_BYTE_VALUE) {
 			cur_sym = cur_ch & (~UTF8_TWO_BYTE_MASK);
 			rb = 1;
-		} else if ((cur_ch &  UTF8_THREE_BYTE_MASK) == UTF8_THREE_BYTE_VALUE) {
+		} else if ((cur_ch & UTF8_THREE_BYTE_MASK) == UTF8_THREE_BYTE_VALUE) {
 			cur_sym = cur_ch & (~UTF8_THREE_BYTE_MASK);
 			rb = 2;
-		} else if ((cur_ch &  UTF8_FOUR_BYTE_MASK) == UTF8_FOUR_BYTE_VALUE) {
+		} else if ((cur_ch & UTF8_FOUR_BYTE_MASK) == UTF8_FOUR_BYTE_VALUE) {
 			cur_sym = cur_ch & (~UTF8_FOUR_BYTE_MASK);
 			rb = 3;
-		}	
-
-		(*bptr)++, (*bptr_size)--;
+		}
 	} while (rb && *bptr_size);
 
 	if (rb)
 		return 0;
+
+	return cur_sym;
+}
+
+static inline uint32_t backward_read_utf8_char(const char **bptr, size_t *bptr_size) {
+	assert (bptr);
+	assert (bptr_size);
+
+	uint32_t cur_sym = 0;
+	size_t rb = 0;
+
+	if (*bptr_size == 0) {
+		return 0;
+	}
+
+	do {
+		const char cur_ch = **bptr;	
+		(*bptr)--, (*bptr_size)--;
+
+		uint32_t cc = (unsigned char) cur_ch;
+
+		if ((cur_ch & UTF8_STREAM_BYTE_MASK) == UTF8_STREAM_BYTE_VALUE) {
+			cc &=	(~UTF8_STREAM_BYTE_MASK);
+			cc <<=	(UTF8_STREAM_SHIFT * rb);
+			cur_sym += cc;
+			rb++;
+
+			continue;
+		}
+
+		if ((cur_ch & UTF8_ONE_BYTE_MASK) == UTF8_ONE_BYTE_VALUE) {
+			cur_sym = cur_ch & (~UTF8_ONE_BYTE_MASK);
+			break;
+		}
+
+		if ((cur_ch & UTF8_TWO_BYTE_MASK) == UTF8_TWO_BYTE_VALUE) {
+			cc &= (~UTF8_TWO_BYTE_MASK);
+			rb = 1;
+		} else if ((cur_ch & UTF8_THREE_BYTE_MASK) == UTF8_THREE_BYTE_VALUE) {
+			cc &= (~UTF8_THREE_BYTE_MASK);
+			rb = 2;
+		} else if ((cur_ch & UTF8_FOUR_BYTE_MASK) == UTF8_FOUR_BYTE_VALUE) {
+			cc &= (~UTF8_FOUR_BYTE_MASK);
+			rb = 3;
+		}
+		cc <<= (UTF8_STREAM_SHIFT * rb);
+		cur_sym += cc;
+		break;
+
+	} while (*bptr_size);
 
 	return cur_sym;
 }
@@ -195,8 +242,8 @@ int backward_string_comparator(const void *a1, const void *a2) {
 	const struct onegin_line *ln1 = (const struct onegin_line *)a1;
 	const struct onegin_line *ln2 = (const struct onegin_line *)a2;
 
-	ssize_t left_sz1 = (ssize_t) ln1->line_sz;
-	ssize_t left_sz2 = (ssize_t) ln2->line_sz;
+	size_t left_sz1 = ln1->line_sz;
+	size_t left_sz2 = ln2->line_sz;
 
 	if (left_sz1 <= 0 || left_sz2 <= 0) {
 		return (int)(left_sz2 - left_sz1);
@@ -205,22 +252,27 @@ int backward_string_comparator(const void *a1, const void *a2) {
 	const char *t1 = ln1->line_ptr + left_sz1 - 1;
 	const char *t2 = ln2->line_ptr + left_sz2 - 1;
 
-	int ret = 0;
+	uint32_t c1 = 0;
+	uint32_t c2 = 0;
 
 	do {
-		skip_no_letter_backwards(&t1, &left_sz1);
-		skip_no_letter_backwards(&t2, &left_sz2);
+		do {
+			c1 = backward_read_utf8_char(&t1, &left_sz1);
+		} while (!is_utf8_letter(c1));
 
-		if (left_sz1 <= 0 || left_sz2 <= 0) {
-			break;
+		do {
+			c2 = backward_read_utf8_char(&t2, &left_sz2);
+		} while (!is_utf8_letter(c2));
+
+		c1 = utf8_to_lower(c1);
+		c2 = utf8_to_lower(c2);
+
+		if (c1 < c2) {
+			return -1;
+		} else if (c1 > c2) {
+			return 1;
 		}
-
-		if ((ret = ascii_compare_chars(*t1, *t2)) != 0) {
-			return ret;
-		}
-
-		t1--, t2--;
-	} while (left_sz1-- > 0 && left_sz2-- > 0);
+	} while (left_sz1 && left_sz2);
 
 	if (left_sz1 < left_sz2) {
 		return 1;
