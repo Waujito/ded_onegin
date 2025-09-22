@@ -9,19 +9,17 @@ enum status_codes {
 	S_FAIL	= -1
 };
 
-#define SUCCEEDED (__ct_error) (__ct_error != S_OK)
+#define _CT_REQUIRE_SEMICOLON (void)0
 
-#define      _CT_TRY                { goto __ct_try; } __ct_try: {	\
-						int __ct_error = S_OK;	\
-						(void)__ct_error;
-#define      _CT_CHECKED( cmd )     { if (FAILED (__ct_error = (cmd))) goto __ct_catch; }
-#define      _CT_FAIL               { __ct_error = S_FAIL; goto __ct_catch; }
-#define      _CT_RETRY              { __ct_error = S_OK;   goto __ct_try;   }
-#define      _CT_OK                 ( SUCCEEDED (__ct_error) )
-#define      _CT_CATCH              goto __ct_finally; __ct_catch:
-#define      _CT_RETURN             goto __ct_finally;
-#define      _CT_FINALLY            __ct_finally:
-#define      _CT_ENDTRY             }
+#define _CT_FAILED(status)		(status != S_OK)
+#define _CT_SUCCEEDED(status)		(status == S_OK)
+
+
+#define	_CT_FAIL(...)	{ ret = S_FAIL; goto exit; } \
+			_CT_REQUIRE_SEMICOLON
+
+#define _CT_CHECKED(cmd)	{ if (_CT_FAILED(ret = (cmd))) goto exit; } \
+				_CT_REQUIRE_SEMICOLON
 
 #define eprintf(...) fprintf(stderr, __VA_ARGS__)
 
@@ -39,7 +37,7 @@ enum status_codes {
 #ifdef _DEBUG
 	#define log_debug(...) eprintf(__VA_ARGS__)
 #else /* _DEBUG */
-	#define log_debug(...) (void)0
+	#define log_debug(...) _CT_REQUIRE_SEMICOLON
 #endif /* _DEBUG */
 
 void _i_assert_gdb_fork(void);
@@ -51,12 +49,12 @@ void _i_assert_gdb_fork(void);
 										\
 		asm ("int $3");							\
 	}									\
-	(void)0									\
+	_CT_REQUIRE_SEMICOLON							\
 
 #ifdef _DEBUG
 	#define i_assert(...) _i_assert(__VA_ARGS__)
 #else /* _DEBUG */
-	#define i_assert(...) (void)0
+	#define i_assert(...) _CT_REQUIRE_SEMICOLON
 #endif /* _DEBUG */
 
 #define ct_close(fd) if ((fd) >= 0) close(fd)

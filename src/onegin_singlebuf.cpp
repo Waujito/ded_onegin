@@ -54,32 +54,32 @@ static int read_file(const char *filename, char **bufptr, size_t *read_bytes_ptr
 	assert (bufptr);
 	assert (read_bytes_ptr);
 
-	FILE *file = fopen(filename, "rb");
-	if (!file) {
+	int ret = S_OK;
+
+	FILE *file = NULL;
+	char *text_buf = NULL;
+	ssize_t fsize = 0;
+	size_t read_bytes = 0;
+
+	if (!(file = fopen(filename, "rb"))) {
 		log_perror("fopen(%s, \"rb\")", filename);
-		return -1;
+		_CT_FAIL();
 	}
 
-	ssize_t fsize = get_file_size(file);
-	if (fsize < 0) {
-		fclose(file);
-		return -1;
+	if ((fsize = get_file_size(file)) < 0) {
+		_CT_FAIL();
 	}
 
-	char *text_buf = (char *)calloc((size_t) fsize + 1, sizeof(char));
+	text_buf = (char *)calloc((size_t) fsize + 1, sizeof(char));
 	if (!text_buf) {
 		log_perror("text arr alloc");
-		fclose(file);
-		return -1;
+		_CT_FAIL();
 	}
 	
-	size_t read_bytes = fread(text_buf, sizeof(char), (size_t) fsize, file);
+	read_bytes = fread(text_buf, sizeof(char), (size_t) fsize, file);
 	if (ferror(file)) {
 		log_perror("fread ferror");
-
-		free(text_buf);
-		fclose(file);
-		return -1;
+		_CT_FAIL();
 	}
 	text_buf[read_bytes] = '\0';
 	read_bytes++;
@@ -88,9 +88,13 @@ static int read_file(const char *filename, char **bufptr, size_t *read_bytes_ptr
 
 	*read_bytes_ptr = read_bytes;
 
-	fclose(file);
+exit:
+	ct_fclose(file);
+	if (_CT_FAILED(ret)) {
+		free(text_buf);
+	}
 
-	return 0;
+	return ret;
 }
 
 static int read_lines(char *text_buf, size_t buflen, struct pvector *lines_arr) {
@@ -121,7 +125,7 @@ static int read_lines(char *text_buf, size_t buflen, struct pvector *lines_arr) 
 			};
 
 			if (pvector_push_back(lines_arr, &o_line) < 0) {
-				return -1;
+				return S_FAIL;
 			}
 
 			start_lineptr = cur_lineptr + 1;
@@ -129,7 +133,7 @@ static int read_lines(char *text_buf, size_t buflen, struct pvector *lines_arr) 
 		}
 	}
 
-	return 0;
+	return S_OK;
 }
 
 static size_t count_lines(const char *text_buf, size_t buflen) {
@@ -153,7 +157,7 @@ static int pvector_read_lines(struct pvector *text_lines, char *buf, size_t bufl
 	ret = pvector_init(text_lines, sizeof(struct onegin_line));
 	if (ret) {
 		log_perror("pvector_init");
-		return -1;
+		return S_FAIL;
 	}
 
 	size_t nlines = count_lines(buf, buflen);
@@ -162,10 +166,10 @@ static int pvector_read_lines(struct pvector *text_lines, char *buf, size_t bufl
 
 	if (read_lines(buf, buflen, text_lines)) {
 		pvector_destroy(text_lines);
-		return -1;
+		return S_FAIL;
 	}
 
-	return 0;
+	return S_OK;
 }
 
 static int print_section_ong(FILE *out_file, const char *label, const struct pvector *onegin_text) {
@@ -179,52 +183,41 @@ static int print_section_ong(FILE *out_file, const char *label, const struct pve
 		fprintf(out_file, "%s\n", o_line->line_ptr);
 	}
 
-	return 0;
+	return S_OK;
 }
 
 int process_text_singlebuf(const char *in_filename, const char *out_filename) {
 	assert (in_filename);
 	assert (out_filename);
 
-	int ret = 0;
+	int ret = S_OK;
 
 	char *text_buf = NULL;
 	size_t read_bytes = 0;
 
 	if (read_file(in_filename, &text_buf, &read_bytes)) {
-		return -1;
+		return S_FAIL;
 	}
 
 	struct pvector lines_arr = {0};
 	struct pvector forward_arr = {0};
 	struct pvector backward_arr = {0};
 
-	if ((ret = pvector_read_lines(&lines_arr, text_buf, read_bytes))) {
-		goto exit;
-	}
+	_CT_CHECKED(pvector_read_lines(&lines_arr, text_buf, read_bytes));
 
 	printf("text_lines_cnt: <%zu>\n", lines_arr.len);
 	
-	if ((ret = pvector_clone(&forward_arr, &lines_arr))) {
-		goto exit;
-	}
+	_CT_CHECKED(pvector_clone(&forward_arr, &lines_arr));
+	_CT_CHECKED(pvector_clone(&backward_arr, &lines_arr));
 
-	if ((ret = pvector_clone(&backward_arr, &lines_arr))) {
-		goto exit;
-	}
-
-	if ((ret = pvector_sort(&forward_arr, forward_string_comparator))) {
-		goto exit;
-	}
-	if ((ret = pvector_sort(&backward_arr, backward_string_comparator))) {
-		goto exit;
-	}
+	_CT_CHECKED(pvector_sort(&forward_arr, forward_string_comparator));
+	_CT_CHECKED(pvector_sort(&backward_arr, backward_string_comparator));
 
 	{
 		FILE *out_file = fopen(out_filename, "wb");
 		if (!out_file) {
-			ret = -1;
-			goto exit;
+			ret = S_FAIL;
+			_CT_FAIL();
 		}
 
 		print_section_ong(out_file, "FORWARD TEXT",	&forward_arr);
