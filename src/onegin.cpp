@@ -83,8 +83,6 @@ int main(int argc, const char *argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	i_assert(1 == 0);
-
 	ret = process_text(ctx.in_filename, ctx.out_filename);
 
 	return 0;
