@@ -15,6 +15,7 @@ enum status_codes {
 #define _CT_SUCCEEDED(status)		(status == S_OK)
 
 
+#define _CT_EXIT_POINT exit
 #define	_CT_FAIL(...)	{ ret = S_FAIL; goto exit; } \
 			_CT_REQUIRE_SEMICOLON
 

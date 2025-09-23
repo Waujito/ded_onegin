@@ -88,7 +88,7 @@ static int read_file(const char *filename, char **bufptr, size_t *read_bytes_ptr
 
 	*read_bytes_ptr = read_bytes;
 
-exit:
+_CT_EXIT_POINT:
 	ct_fclose(file);
 	if (_CT_FAILED(ret)) {
 		free(text_buf);
@@ -227,7 +227,7 @@ int process_text_singlebuf(const char *in_filename, const char *out_filename) {
 		fclose(out_file);
 	}
 
-exit:
+_CT_EXIT_POINT:
 	pvector_destroy(&backward_arr);
 	pvector_destroy(&forward_arr);
 	pvector_destroy(&lines_arr);
